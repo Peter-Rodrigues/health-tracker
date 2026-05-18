@@ -1,0 +1,1419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Health Tracker</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:system-ui,-apple-system,sans-serif;background:#fff;color:#111}
+  input,select,button{font-family:inherit;font-size:13px;outline:none}
+  input{border:1px solid #ddd;border-radius:7px;padding:7px 10px}
+  button{cursor:pointer;border-radius:7px;border:1px solid #ddd;background:#fff;padding:7px 14px}
+  button:hover{opacity:0.85}
+  ::-webkit-scrollbar{width:6px} ::-webkit-scrollbar-thumb{background:#ddd;border-radius:3px}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState } = React;
+
+const FOODS = [
+  // ── Your foods ──────────────────────────────────────────────────────────
+  {n:"Musashi protein (45g serve)",   c:180, p:30.1, srv:"45g",   grp:"⭐ Your foods"},
+  {n:"Musashi protein (15g serve)",   c:60,  p:10,   srv:"15g",   grp:"⭐ Your foods"},
+  {n:"Light milk",                    c:90,  p:6.86, srv:"250ml", grp:"⭐ Your foods"},
+  {n:"Chia seeds",                    c:44,  p:2,    srv:"10g",   grp:"⭐ Your foods"},
+  {n:"Frozen berries",                c:41,  p:1,    srv:"100g",  grp:"⭐ Your foods"},
+  {n:"Banana",                        c:55,  p:1,    srv:"60g",   grp:"⭐ Your foods"},
+  {n:"Woolworths Greek yoghurt",      c:117, p:5,    srv:"100g",  grp:"⭐ Your foods"},
+  {n:"All Bran",                      c:153, p:6.3,  srv:"45g",   grp:"⭐ Your foods"},
+  {n:"Sunsol Granola HP choc almond", c:206, p:10.2, srv:"45g",   grp:"⭐ Your foods"},
+  {n:"Spinach",                       c:10,  p:1,    srv:"40g",   grp:"⭐ Your foods"},
+  {n:"Chicken thigh (cooked)",        c:208, p:28.8, srv:"116g",  grp:"⭐ Your foods"},
+  // ── Fresh fruit ─────────────────────────────────────────────────────────
+  {n:"Apple",               c:52,  p:0.3, srv:"100g",     grp:"Fruit"},
+  {n:"Apple (medium)",      c:95,  p:0.5, srv:"1 medium", grp:"Fruit"},
+  {n:"Banana (medium)",     c:89,  p:1.1, srv:"1 medium", grp:"Fruit"},
+  {n:"Orange",              c:47,  p:0.9, srv:"100g",     grp:"Fruit"},
+  {n:"Orange (medium)",     c:62,  p:1.2, srv:"1 medium", grp:"Fruit"},
+  {n:"Grapes",              c:69,  p:0.7, srv:"100g",     grp:"Fruit"},
+  {n:"Strawberries",        c:32,  p:0.7, srv:"100g",     grp:"Fruit"},
+  {n:"Blueberries",         c:57,  p:0.7, srv:"100g",     grp:"Fruit"},
+  {n:"Raspberries",         c:53,  p:1.2, srv:"100g",     grp:"Fruit"},
+  {n:"Avocado",             c:160, p:2,   srv:"100g",     grp:"Fruit"},
+  {n:"Avocado (half)",      c:160, p:2,   srv:"half ~100g",grp:"Fruit"},
+  {n:"Mango",               c:60,  p:0.8, srv:"100g",     grp:"Fruit"},
+  {n:"Watermelon",          c:30,  p:0.6, srv:"100g",     grp:"Fruit"},
+  {n:"Pineapple",           c:50,  p:0.5, srv:"100g",     grp:"Fruit"},
+  {n:"Pear",                c:57,  p:0.4, srv:"100g",     grp:"Fruit"},
+  {n:"Kiwi fruit",          c:61,  p:1.1, srv:"100g",     grp:"Fruit"},
+  {n:"Peach",               c:39,  p:0.9, srv:"100g",     grp:"Fruit"},
+  {n:"Plum",                c:46,  p:0.7, srv:"100g",     grp:"Fruit"},
+  {n:"Cherries",            c:63,  p:1.1, srv:"100g",     grp:"Fruit"},
+  {n:"Rockmelon",           c:34,  p:0.8, srv:"100g",     grp:"Fruit"},
+  {n:"Honeydew melon",      c:36,  p:0.5, srv:"100g",     grp:"Fruit"},
+  {n:"Dates (dried)",       c:282, p:2.5, srv:"100g",     grp:"Fruit"},
+  {n:"Raisins",             c:299, p:3.1, srv:"100g",     grp:"Fruit"},
+  // ── Vegetables ──────────────────────────────────────────────────────────
+  {n:"Broccoli",            c:34,  p:2.8, srv:"100g",     grp:"Vegetables"},
+  {n:"Spinach (raw)",       c:23,  p:2.9, srv:"100g",     grp:"Vegetables"},
+  {n:"Spinach (cooked)",    c:23,  p:3,   srv:"100g",     grp:"Vegetables"},
+  {n:"Kale",                c:49,  p:4.3, srv:"100g",     grp:"Vegetables"},
+  {n:"Lettuce",             c:15,  p:1.4, srv:"100g",     grp:"Vegetables"},
+  {n:"Mixed salad leaves",  c:15,  p:1.5, srv:"100g",     grp:"Vegetables"},
+  {n:"Carrot",              c:41,  p:0.9, srv:"100g",     grp:"Vegetables"},
+  {n:"Tomato",              c:18,  p:0.9, srv:"100g",     grp:"Vegetables"},
+  {n:"Tomato (medium)",     c:22,  p:1.1, srv:"1 medium", grp:"Vegetables"},
+  {n:"Cherry tomatoes",     c:18,  p:0.9, srv:"100g",     grp:"Vegetables"},
+  {n:"Cucumber",            c:15,  p:0.6, srv:"100g",     grp:"Vegetables"},
+  {n:"Capsicum (red)",      c:31,  p:1,   srv:"100g",     grp:"Vegetables"},
+  {n:"Capsicum (green)",    c:20,  p:0.9, srv:"100g",     grp:"Vegetables"},
+  {n:"Zucchini",            c:17,  p:1.2, srv:"100g",     grp:"Vegetables"},
+  {n:"Eggplant",            c:25,  p:1,   srv:"100g",     grp:"Vegetables"},
+  {n:"Mushrooms",           c:22,  p:3.1, srv:"100g",     grp:"Vegetables"},
+  {n:"Onion",               c:40,  p:1.1, srv:"100g",     grp:"Vegetables"},
+  {n:"Garlic",              c:149, p:6.4, srv:"100g",     grp:"Vegetables"},
+  {n:"Celery",              c:16,  p:0.7, srv:"100g",     grp:"Vegetables"},
+  {n:"Asparagus",           c:20,  p:2.2, srv:"100g",     grp:"Vegetables"},
+  {n:"Green beans",         c:31,  p:1.8, srv:"100g",     grp:"Vegetables"},
+  {n:"Snow peas",           c:42,  p:2.8, srv:"100g",     grp:"Vegetables"},
+  {n:"Corn (canned)",       c:86,  p:3.2, srv:"100g",     grp:"Vegetables"},
+  {n:"Corn on the cob",     c:86,  p:3.2, srv:"1 cob ~150g",grp:"Vegetables"},
+  {n:"Potato (raw)",        c:77,  p:2,   srv:"100g",     grp:"Vegetables"},
+  {n:"Potato (boiled)",     c:87,  p:1.9, srv:"100g",     grp:"Vegetables"},
+  {n:"Potato (baked)",      c:93,  p:2.5, srv:"100g",     grp:"Vegetables"},
+  {n:"Sweet potato",        c:86,  p:1.6, srv:"100g",     grp:"Vegetables"},
+  {n:"Pumpkin",             c:26,  p:1,   srv:"100g",     grp:"Vegetables"},
+  {n:"Cauliflower",         c:25,  p:1.9, srv:"100g",     grp:"Vegetables"},
+  {n:"Brussels sprouts",    c:43,  p:3.4, srv:"100g",     grp:"Vegetables"},
+  {n:"Cabbage",             c:25,  p:1.3, srv:"100g",     grp:"Vegetables"},
+  {n:"Bok choy",            c:13,  p:1.5, srv:"100g",     grp:"Vegetables"},
+  {n:"Beetroot",            c:43,  p:1.6, srv:"100g",     grp:"Vegetables"},
+  {n:"Peas (frozen)",       c:81,  p:5.4, srv:"100g",     grp:"Vegetables"},
+  {n:"Leek",                c:61,  p:1.5, srv:"100g",     grp:"Vegetables"},
+  // ── Meat ────────────────────────────────────────────────────────────────
+  {n:"Chicken breast (raw)",    c:110, p:23,  srv:"100g",    grp:"Meat & fish"},
+  {n:"Chicken breast (cooked)", c:165, p:31,  srv:"100g",    grp:"Meat & fish"},
+  {n:"Chicken thigh (raw)",     c:177, p:19,  srv:"100g",    grp:"Meat & fish"},
+  {n:"Chicken thigh (cooked)",  c:209, p:26,  srv:"100g",    grp:"Meat & fish"},
+  {n:"Chicken drumstick",       c:172, p:22,  srv:"100g",    grp:"Meat & fish"},
+  {n:"Chicken mince",           c:143, p:19,  srv:"100g",    grp:"Meat & fish"},
+  {n:"Beef steak (lean)",       c:179, p:28,  srv:"100g",    grp:"Meat & fish"},
+  {n:"Beef mince (lean)",       c:215, p:26,  srv:"100g",    grp:"Meat & fish"},
+  {n:"Beef mince (regular)",    c:254, p:24,  srv:"100g",    grp:"Meat & fish"},
+  {n:"Lamb chop (cooked)",      c:235, p:25,  srv:"100g",    grp:"Meat & fish"},
+  {n:"Lamb mince",              c:235, p:22,  srv:"100g",    grp:"Meat & fish"},
+  {n:"Pork loin (cooked)",      c:189, p:27,  srv:"100g",    grp:"Meat & fish"},
+  {n:"Pork mince",              c:218, p:22,  srv:"100g",    grp:"Meat & fish"},
+  {n:"Bacon (grilled)",         c:215, p:23,  srv:"100g",    grp:"Meat & fish"},
+  {n:"Bacon (2 rashers)",       c:86,  p:9,   srv:"2 rashers ~40g",grp:"Meat & fish"},
+  {n:"Ham (sliced)",            c:107, p:17,  srv:"100g",    grp:"Meat & fish"},
+  {n:"Sausage (beef/pork)",     c:265, p:12,  srv:"100g",    grp:"Meat & fish"},
+  {n:"Salami",                  c:336, p:21,  srv:"100g",    grp:"Meat & fish"},
+  // ── Fish & seafood ───────────────────────────────────────────────────────
+  {n:"Salmon (fillet)",         c:208, p:20,  srv:"100g",    grp:"Meat & fish"},
+  {n:"Salmon (smoked)",         c:179, p:22,  srv:"100g",    grp:"Meat & fish"},
+  {n:"Tuna (canned in water)",  c:116, p:26,  srv:"100g",    grp:"Meat & fish"},
+  {n:"Tuna (canned in oil)",    c:198, p:25,  srv:"100g",    grp:"Meat & fish"},
+  {n:"Sardines (canned)",       c:208, p:25,  srv:"100g",    grp:"Meat & fish"},
+  {n:"Prawns (cooked)",         c:99,  p:21,  srv:"100g",    grp:"Meat & fish"},
+  {n:"White fish fillet",       c:90,  p:19,  srv:"100g",    grp:"Meat & fish"},
+  {n:"Barramundi",              c:110, p:22,  srv:"100g",    grp:"Meat & fish"},
+  {n:"Cod / flake",             c:82,  p:18,  srv:"100g",    grp:"Meat & fish"},
+  {n:"Calamari (grilled)",      c:92,  p:16,  srv:"100g",    grp:"Meat & fish"},
+  // ── Eggs & dairy ────────────────────────────────────────────────────────
+  {n:"Egg (1 large)",           c:78,  p:6,   srv:"1 egg",   grp:"Eggs & dairy"},
+  {n:"Egg whites",              c:17,  p:3.6, srv:"1 white", grp:"Eggs & dairy"},
+  {n:"Scrambled eggs (2 eggs)", c:200, p:14,  srv:"2 eggs",  grp:"Eggs & dairy"},
+  {n:"Milk full fat",           c:61,  p:3.2, srv:"100ml",   grp:"Eggs & dairy"},
+  {n:"Milk reduced fat",        c:47,  p:3.5, srv:"100ml",   grp:"Eggs & dairy"},
+  {n:"Milk skim",               c:35,  p:3.4, srv:"100ml",   grp:"Eggs & dairy"},
+  {n:"Greek yoghurt (generic)", c:97,  p:9,   srv:"100g",    grp:"Eggs & dairy"},
+  {n:"Natural yoghurt",         c:61,  p:3.5, srv:"100g",    grp:"Eggs & dairy"},
+  {n:"Cheddar",                 c:402, p:25,  srv:"100g",    grp:"Eggs & dairy"},
+  {n:"Cheddar (slice 20g)",     c:80,  p:5,   srv:"1 slice", grp:"Eggs & dairy"},
+  {n:"Feta",                    c:264, p:14,  srv:"100g",    grp:"Eggs & dairy"},
+  {n:"Mozzarella",              c:280, p:22,  srv:"100g",    grp:"Eggs & dairy"},
+  {n:"Parmesan",                c:431, p:38,  srv:"100g",    grp:"Eggs & dairy"},
+  {n:"Cottage cheese",          c:98,  p:11,  srv:"100g",    grp:"Eggs & dairy"},
+  {n:"Ricotta",                 c:174, p:11,  srv:"100g",    grp:"Eggs & dairy"},
+  {n:"Cream cheese",            c:342, p:6,   srv:"100g",    grp:"Eggs & dairy"},
+  {n:"Sour cream",              c:193, p:2.4, srv:"100g",    grp:"Eggs & dairy"},
+  {n:"Butter",                  c:717, p:0.9, srv:"100g",    grp:"Eggs & dairy"},
+  {n:"Butter (tsp)",            c:36,  p:0,   srv:"1 tsp 5g",grp:"Eggs & dairy"},
+  // ── Grains & bread ──────────────────────────────────────────────────────
+  {n:"White rice (cooked)",     c:130, p:2.7, srv:"100g",       grp:"Grains"},
+  {n:"Brown rice (cooked)",     c:112, p:2.6, srv:"100g",       grp:"Grains"},
+  {n:"Basmati rice (cooked)",   c:121, p:2.5, srv:"100g",       grp:"Grains"},
+  {n:"White bread",             c:265, p:9,   srv:"100g",       grp:"Grains"},
+  {n:"White bread (slice)",     c:79,  p:2.7, srv:"1 slice 30g",grp:"Grains"},
+  {n:"Wholegrain bread (slice)",c:69,  p:3,   srv:"1 slice 30g",grp:"Grains"},
+  {n:"Sourdough (slice)",       c:90,  p:3.5, srv:"1 slice 35g",grp:"Grains"},
+  {n:"Oats (dry)",              c:389, p:17,  srv:"100g",       grp:"Grains"},
+  {n:"Oats (cooked porridge)",  c:71,  p:2.5, srv:"100g",       grp:"Grains"},
+  {n:"Pasta (dry)",             c:371, p:13,  srv:"100g",       grp:"Grains"},
+  {n:"Pasta (cooked)",          c:131, p:5,   srv:"100g",       grp:"Grains"},
+  {n:"Spaghetti (cooked)",      c:131, p:5,   srv:"100g",       grp:"Grains"},
+  {n:"Noodles (egg, cooked)",   c:138, p:4.5, srv:"100g",       grp:"Grains"},
+  {n:"Weetbix",                 c:136, p:4.6, srv:"2 biscuits", grp:"Grains"},
+  {n:"Weet-Bix",                c:136, p:4.6, srv:"2 biscuits", grp:"Grains"},
+  {n:"Corn flakes",             c:357, p:7,   srv:"100g",       grp:"Grains"},
+  {n:"Muesli (toasted)",        c:398, p:9,   srv:"100g",       grp:"Grains"},
+  {n:"Muesli (natural)",        c:363, p:10,  srv:"100g",       grp:"Grains"},
+  {n:"Crumpet",                 c:180, p:6,   srv:"1 crumpet 60g",grp:"Grains"},
+  {n:"English muffin",          c:220, p:8,   srv:"1 muffin 60g",grp:"Grains"},
+  {n:"Wrap / tortilla",         c:290, p:7,   srv:"1 wrap 60g", grp:"Grains"},
+  {n:"Couscous (cooked)",       c:112, p:3.8, srv:"100g",       grp:"Grains"},
+  {n:"Quinoa (cooked)",         c:120, p:4.4, srv:"100g",       grp:"Grains"},
+  {n:"Barley (cooked)",         c:123, p:2.3, srv:"100g",       grp:"Grains"},
+  // ── Nuts, seeds & legumes ───────────────────────────────────────────────
+  {n:"Almonds",                 c:579, p:21,  srv:"100g",    grp:"Nuts & legumes"},
+  {n:"Almonds (small handful)", c:174, p:6,   srv:"30g",     grp:"Nuts & legumes"},
+  {n:"Cashews",                 c:553, p:18,  srv:"100g",    grp:"Nuts & legumes"},
+  {n:"Walnuts",                 c:654, p:15,  srv:"100g",    grp:"Nuts & legumes"},
+  {n:"Macadamia nuts",          c:718, p:8,   srv:"100g",    grp:"Nuts & legumes"},
+  {n:"Pistachios",              c:562, p:20,  srv:"100g",    grp:"Nuts & legumes"},
+  {n:"Peanuts",                 c:567, p:26,  srv:"100g",    grp:"Nuts & legumes"},
+  {n:"Peanut butter",           c:588, p:25,  srv:"100g",    grp:"Nuts & legumes"},
+  {n:"Peanut butter (tbsp)",    c:94,  p:4,   srv:"1 tbsp",  grp:"Nuts & legumes"},
+  {n:"Almond butter",           c:614, p:21,  srv:"100g",    grp:"Nuts & legumes"},
+  {n:"Sunflower seeds",         c:584, p:21,  srv:"100g",    grp:"Nuts & legumes"},
+  {n:"Pumpkin seeds",           c:559, p:30,  srv:"100g",    grp:"Nuts & legumes"},
+  {n:"Chia seeds",              c:486, p:17,  srv:"100g",    grp:"Nuts & legumes"},
+  {n:"Flaxseeds / linseeds",    c:534, p:18,  srv:"100g",    grp:"Nuts & legumes"},
+  {n:"Lentils (cooked)",        c:116, p:9,   srv:"100g",    grp:"Nuts & legumes"},
+  {n:"Chickpeas (cooked)",      c:164, p:8.9, srv:"100g",    grp:"Nuts & legumes"},
+  {n:"Black beans (cooked)",    c:132, p:8.9, srv:"100g",    grp:"Nuts & legumes"},
+  {n:"Kidney beans (cooked)",   c:127, p:8.7, srv:"100g",    grp:"Nuts & legumes"},
+  {n:"Four bean mix (canned)",  c:93,  p:6,   srv:"100g",    grp:"Nuts & legumes"},
+  {n:"Tofu (firm)",             c:76,  p:8,   srv:"100g",    grp:"Nuts & legumes"},
+  {n:"Edamame",                 c:121, p:11,  srv:"100g",    grp:"Nuts & legumes"},
+  {n:"Hummus",                  c:166, p:8,   srv:"100g",    grp:"Nuts & legumes"},
+  {n:"Hummus (2 tbsp)",         c:70,  p:2.5, srv:"2 tbsp",  grp:"Nuts & legumes"},
+  // ── Common meals & dishes ───────────────────────────────────────────────
+  {n:"Bolognese (beef, with pasta)", c:200, p:14, srv:"100g",      grp:"Meals"},
+  {n:"Spaghetti bolognese",          c:200, p:14, srv:"100g",      grp:"Meals"},
+  {n:"Lasagne (beef)",               c:160, p:10, srv:"100g",      grp:"Meals"},
+  {n:"Stir fry (chicken & veg)",     c:130, p:14, srv:"100g",      grp:"Meals"},
+  {n:"Stir fry (beef & veg)",        c:145, p:13, srv:"100g",      grp:"Meals"},
+  {n:"Fried rice (chicken)",         c:163, p:7,  srv:"100g",      grp:"Meals"},
+  {n:"Fried rice (egg)",             c:155, p:5,  srv:"100g",      grp:"Meals"},
+  {n:"Chicken curry (with rice)",    c:148, p:9,  srv:"100g",      grp:"Meals"},
+  {n:"Butter chicken",               c:150, p:12, srv:"100g",      grp:"Meals"},
+  {n:"Beef curry",                   c:165, p:13, srv:"100g",      grp:"Meals"},
+  {n:"Chilli con carne",             c:135, p:11, srv:"100g",      grp:"Meals"},
+  {n:"Soup (vegetable)",             c:50,  p:2,  srv:"100g",      grp:"Meals"},
+  {n:"Soup (chicken)",               c:65,  p:5,  srv:"100g",      grp:"Meals"},
+  {n:"Soup (lentil)",                c:80,  p:5,  srv:"100g",      grp:"Meals"},
+  {n:"Omelette (2 eggs)",            c:190, p:14, srv:"1 omelette",grp:"Meals"},
+  {n:"Frittata (slice)",             c:170, p:12, srv:"1 slice",   grp:"Meals"},
+  {n:"Caesar salad (no dressing)",   c:80,  p:7,  srv:"100g",      grp:"Meals"},
+  {n:"Caesar salad (with dressing)", c:150, p:7,  srv:"100g",      grp:"Meals"},
+  {n:"Greek salad",                  c:90,  p:4,  srv:"100g",      grp:"Meals"},
+  {n:"Tuna salad",                   c:120, p:14, srv:"100g",      grp:"Meals"},
+  {n:"Chicken salad",                c:130, p:15, srv:"100g",      grp:"Meals"},
+  {n:"Sandwich (chicken)",           c:250, p:18, srv:"1 sandwich",grp:"Meals"},
+  {n:"Sandwich (ham & cheese)",      c:280, p:16, srv:"1 sandwich",grp:"Meals"},
+  {n:"Sandwich (egg)",               c:240, p:14, srv:"1 sandwich",grp:"Meals"},
+  {n:"Wrap (chicken)",               c:310, p:22, srv:"1 wrap",    grp:"Meals"},
+  {n:"Sushi roll (salmon, 6pc)",     c:250, p:12, srv:"6 pieces",  grp:"Meals"},
+  {n:"Sushi roll (chicken, 6pc)",    c:240, p:11, srv:"6 pieces",  grp:"Meals"},
+  {n:"Pizza (cheese, 1 slice)",      c:250, p:11, srv:"1 slice",   grp:"Meals"},
+  {n:"Pizza (meat, 1 slice)",        c:280, p:13, srv:"1 slice",   grp:"Meals"},
+  {n:"Burger (beef, plain)",         c:295, p:17, srv:"1 burger",  grp:"Meals"},
+  {n:"Burger (chicken, plain)",      c:280, p:16, srv:"1 burger",  grp:"Meals"},
+  {n:"Fish and chips (takeaway)",    c:265, p:11, srv:"100g",      grp:"Meals"},
+  {n:"Chips / hot chips (takeaway)", c:290, p:4,  srv:"100g",      grp:"Meals"},
+  {n:"Roast chicken (no skin)",      c:165, p:31, srv:"100g",      grp:"Meals"},
+  {n:"Roast beef",                   c:195, p:28, srv:"100g",      grp:"Meals"},
+  {n:"Steak (grilled, lean)",        c:179, p:28, srv:"100g",      grp:"Meals"},
+  {n:"Pancakes (2 plain)",           c:340, p:9,  srv:"2 pancakes",grp:"Meals"},
+  {n:"French toast (1 slice)",       c:210, p:7,  srv:"1 slice",   grp:"Meals"},
+  {n:"Muesli with milk",             c:230, p:8,  srv:"1 bowl",    grp:"Meals"},
+  {n:"Porridge with milk",           c:180, p:7,  srv:"1 bowl",    grp:"Meals"},
+  // ── Drinks ──────────────────────────────────────────────────────────────
+  {n:"Water",               c:0,   p:0,   srv:"any",    grp:"Drinks"},
+  {n:"Coffee (black)",      c:2,   p:0.3, srv:"1 cup",  grp:"Drinks"},
+  {n:"Flat white",          c:120, p:6,   srv:"1 cup",  grp:"Drinks"},
+  {n:"Latte (regular)",     c:150, p:7.5, srv:"regular",grp:"Drinks"},
+  {n:"Latte (large)",       c:180, p:9,   srv:"large",  grp:"Drinks"},
+  {n:"Cappuccino",          c:100, p:5,   srv:"1 cup",  grp:"Drinks"},
+  {n:"Long black",          c:5,   p:0.5, srv:"1 cup",  grp:"Drinks"},
+  {n:"Macchiato",           c:30,  p:1.5, srv:"1 cup",  grp:"Drinks"},
+  {n:"Chai latte",          c:200, p:6,   srv:"regular",grp:"Drinks"},
+  {n:"Hot chocolate",       c:220, p:7,   srv:"regular",grp:"Drinks"},
+  {n:"Tea (black)",         c:2,   p:0,   srv:"1 cup",  grp:"Drinks"},
+  {n:"Tea with milk",       c:20,  p:1,   srv:"1 cup",  grp:"Drinks"},
+  {n:"Orange juice",        c:45,  p:0.7, srv:"100ml",  grp:"Drinks"},
+  {n:"Apple juice",         c:46,  p:0.1, srv:"100ml",  grp:"Drinks"},
+  {n:"Smoothie (fruit)",    c:80,  p:1,   srv:"100ml",  grp:"Drinks"},
+  {n:"Protein smoothie",    c:150, p:15,  srv:"300ml",  grp:"Drinks"},
+  {n:"Beer (regular)",      c:153, p:1.3, srv:"375ml",  grp:"Drinks"},
+  {n:"Beer (light)",        c:95,  p:0.7, srv:"375ml",  grp:"Drinks"},
+  {n:"Beer (mid-strength)", c:120, p:1,   srv:"375ml",  grp:"Drinks"},
+  {n:"Red wine",            c:125, p:0.1, srv:"150ml",  grp:"Drinks"},
+  {n:"White wine",          c:121, p:0.1, srv:"150ml",  grp:"Drinks"},
+  {n:"Sparkling wine",      c:95,  p:0.3, srv:"150ml",  grp:"Drinks"},
+  {n:"Spirits (shot)",      c:64,  p:0,   srv:"30ml",   grp:"Drinks"},
+  {n:"Soft drink / cola",   c:150, p:0,   srv:"375ml",  grp:"Drinks"},
+  {n:"Diet soft drink",     c:2,   p:0,   srv:"375ml",  grp:"Drinks"},
+  {n:"Coconut water",       c:46,  p:1.7, srv:"250ml",  grp:"Drinks"},
+  {n:"Sports drink",        c:113, p:0,   srv:"500ml",  grp:"Drinks"},
+  // ── Snacks ──────────────────────────────────────────────────────────────
+  {n:"Chocolate bar",       c:265, p:3.5, srv:"50g",       grp:"Snacks"},
+  {n:"Milk chocolate",      c:535, p:7.7, srv:"100g",      grp:"Snacks"},
+  {n:"Dark chocolate",      c:546, p:5,   srv:"100g",      grp:"Snacks"},
+  {n:"Dark chocolate (row)",c:170, p:2.2, srv:"3 squares 30g",grp:"Snacks"},
+  {n:"Tim Tam",             c:84,  p:1,   srv:"1 biscuit", grp:"Snacks"},
+  {n:"Potato chips",        c:536, p:7,   srv:"100g",      grp:"Snacks"},
+  {n:"Potato chips (small bag)", c:161, p:2, srv:"30g bag",grp:"Snacks"},
+  {n:"Muesli bar",          c:150, p:3,   srv:"35g bar",   grp:"Snacks"},
+  {n:"Bliss ball",          c:180, p:4,   srv:"1 ball 35g",grp:"Snacks"},
+  {n:"Rice cracker",        c:388, p:8,   srv:"100g",      grp:"Snacks"},
+  {n:"Corn chip",           c:536, p:7,   srv:"100g",      grp:"Snacks"},
+  {n:"Popcorn (plain)",     c:375, p:11,  srv:"100g",      grp:"Snacks"},
+  {n:"Cracker (vita weat)", c:430, p:10,  srv:"100g",      grp:"Snacks"},
+  {n:"Cheese & crackers",   c:220, p:7,   srv:"6 crackers + cheese",grp:"Snacks"},
+  {n:"Fruit & nut mix",     c:450, p:10,  srv:"100g",      grp:"Snacks"},
+  // ── Condiments & sauces ─────────────────────────────────────────────────
+  {n:"Olive oil",           c:884, p:0,   srv:"100ml",  grp:"Extras"},
+  {n:"Olive oil (tbsp)",    c:119, p:0,   srv:"1 tbsp", grp:"Extras"},
+  {n:"Butter",              c:717, p:0.9, srv:"100g",   grp:"Extras"},
+  {n:"Butter (tsp)",        c:36,  p:0,   srv:"1 tsp",  grp:"Extras"},
+  {n:"Mayonnaise",          c:680, p:1,   srv:"100g",   grp:"Extras"},
+  {n:"Mayonnaise (tbsp)",   c:94,  p:0.1, srv:"1 tbsp", grp:"Extras"},
+  {n:"Tomato sauce",        c:97,  p:1.3, srv:"100g",   grp:"Extras"},
+  {n:"Tomato sauce (tbsp)", c:17,  p:0.3, srv:"1 tbsp", grp:"Extras"},
+  {n:"BBQ sauce",           c:172, p:1.5, srv:"100g",   grp:"Extras"},
+  {n:"Soy sauce",           c:53,  p:8,   srv:"100ml",  grp:"Extras"},
+  {n:"Sweet chilli sauce",  c:188, p:1,   srv:"100g",   grp:"Extras"},
+  {n:"Sriracha",            c:93,  p:1.7, srv:"100g",   grp:"Extras"},
+  {n:"Honey",               c:304, p:0.3, srv:"100g",   grp:"Extras"},
+  {n:"Honey (tbsp)",        c:64,  p:0,   srv:"1 tbsp", grp:"Extras"},
+  {n:"Jam",                 c:250, p:0.4, srv:"100g",   grp:"Extras"},
+  {n:"Vegemite",            c:220, p:26,  srv:"100g",   grp:"Extras"},
+  {n:"Vegemite (tsp)",      c:11,  p:1.3, srv:"1 tsp 5g",grp:"Extras"},
+  {n:"Pesto",               c:350, p:6,   srv:"100g",   grp:"Extras"},
+  {n:"Tzatziki",            c:90,  p:4,   srv:"100g",   grp:"Extras"},
+  {n:"Salsa",               c:36,  p:1.5, srv:"100g",   grp:"Extras"},
+  {n:"Caesar dressing",     c:370, p:3,   srv:"100g",   grp:"Extras"},
+  {n:"Balsamic vinegar",    c:88,  p:0.5, srv:"100ml",  grp:"Extras"},
+  {n:"Coconut oil (tbsp)",  c:121, p:0,   srv:"1 tbsp", grp:"Extras"},
+  {n:"Sugar (tsp)",         c:16,  p:0,   srv:"1 tsp",  grp:"Extras"},
+  // ── Protein & supplements ───────────────────────────────────────────────
+  {n:"Protein shake (whey, 1 scoop)", c:120, p:25, srv:"~30g", grp:"Supplements"},
+  {n:"Protein bar (generic)",         c:200, p:20, srv:"60g",  grp:"Supplements"},
+  {n:"Creatine",                      c:0,   p:0,  srv:"5g",   grp:"Supplements"},
+  {n:"Mass gainer (1 scoop)",         c:400, p:30, srv:"100g", grp:"Supplements"},
+];
+
+const ACTIVITIES = [
+  {n:"Walking",e:"🚶",r:4},{n:"Running",e:"🏃",r:10},{n:"Cycling",e:"🚴",r:8},
+  {n:"Swimming",e:"🏊",r:9},{n:"Weight training",e:"🏋️",r:6},{n:"HIIT",e:"⚡",r:12},
+  {n:"Yoga",e:"🧘",r:3},{n:"Pilates",e:"🤸",r:4},{n:"Football",e:"⚽",r:8},
+  {n:"Basketball",e:"🏀",r:8},{n:"Tennis",e:"🎾",r:7},{n:"Rowing",e:"🚣",r:10},
+  {n:"Stair climbing",e:"🪜",r:9},{n:"Dancing",e:"💃",r:5},{n:"Stretching",e:"🙆",r:2},
+  {n:"Golf",e:"⛳",r:4},{n:"Surfing",e:"🏄",r:5},
+];
+
+const MEALS = ["Breakfast","Lunch","Dinner","Snack","Drink"];
+
+function localDateKey(d){
+  // Use local date, not UTC — avoids Australian timezone shifting the date back
+  const dt=d||new Date();
+  const y=dt.getFullYear();
+  const m=String(dt.getMonth()+1).padStart(2,"0");
+  const day=String(dt.getDate()).padStart(2,"0");
+  return y+"-"+m+"-"+day;
+}
+function todayKey(){return localDateKey();}
+function formatDay(k){
+  const t=todayKey();
+  const yd=new Date();yd.setDate(yd.getDate()-1);
+  if(k===t)return"Today";
+  if(k===localDateKey(yd))return"Yesterday";
+  return new Date(k+"T12:00:00").toLocaleDateString("en-AU",{weekday:"short",day:"numeric",month:"short"});
+}
+function loadState(){
+  try{
+    // Migrate from older keys if present
+    let raw=localStorage.getItem("ht7");
+    if(!raw){
+      // Try previous key versions and migrate
+      for(const oldKey of ["ht6","ht5","ht4","ht3"]){
+        const old=localStorage.getItem(oldKey);
+        if(old){raw=old;break;}
+      }
+    }
+    const d=JSON.parse(raw||"{}");
+    return{
+      log:d.log||{},
+      goals:d.goals||{cal:0,pro:0,wt:80,age:0},
+      custActs:d.custActs||[],
+      custFoods:d.custFoods||[],
+      custMeals:d.custMeals||[],
+    };
+  }
+  catch(e){return{log:{},goals:{cal:0,pro:0,wt:80,age:0},custActs:[],custFoods:[],custMeals:[]};}
+}
+function persist(log,goals,custActs,custFoods,custMeals){
+  try{localStorage.setItem("ht7",JSON.stringify({log,goals,custActs,custFoods,custMeals}));}catch(e){}
+}
+// BMR using Mifflin-St Jeor (returns kcal/day)
+function calcBMR(wt,age,sex){
+  // sex: "male" or "female"
+  if(!wt||!age)return 0;
+  if(sex==="female") return Math.round(10*wt + 6.25*170 - 5*age - 161);
+  return Math.round(10*wt + 6.25*175 - 5*age + 5);
+}
+function getDay(log,k){return log[k]||{food:[],acts:[]};}
+function calcDay(log,k,goals){
+  const d=getDay(log,k);let cal=0,pro=0,burn=0;
+  d.food.forEach(f=>{cal+=f.cal;pro+=f.pro;});
+  d.acts.forEach(a=>{burn+=a.cal;});
+  // Use day-specific weight/age overrides if stored, else fall back to goals
+  const wt=(d.wt!=null?d.wt:goals&&goals.wt)||0;
+  const age=(d.age!=null?d.age:goals&&goals.age)||0;
+  const sex=(goals&&goals.sex)||"male";
+  const bmr=calcBMR(wt,age,sex);
+  return{cal:Math.round(cal),pro:Math.round(pro*10)/10,burn:Math.round(burn),net:Math.round(cal-burn),bmr,wt,age};
+}
+
+function Bar({val,max,color}){
+  const pct=max?Math.min(100,Math.round(val/max*100)):0;
+  return <div style={{height:4,background:"#e5e5e5",borderRadius:2,marginTop:6,overflow:"hidden"}}>
+    <div style={{height:"100%",width:pct+"%",background:color,borderRadius:2,transition:"width .3s"}}/>
+  </div>;
+}
+
+function SummaryCards({log,day,goals}){
+  const{cal,pro,burn,net,bmr}=calcDay(log,day,goals);
+  // Net energy includes BMR: food - activity burn - BMR
+  const netWithBmr=bmr>0?cal-burn-bmr:net;
+  return <div style={{marginBottom:20}}>
+    <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:8}}>
+    {[
+      {label:"Energy in",     val:cal,  unit:"kcal", goal:goals.cal, color:"#3b82f6"},
+      {label:"Protein",       val:pro,  unit:"g",    goal:goals.pro, color:"#10b981"},
+      {label:"Activity burn", val:burn, unit:"kcal", goal:null,      color:"#f97316"},
+      {label:"Net energy",    val:bmr>0?netWithBmr:net, unit:"kcal", goal:null, color:bmr>0&&netWithBmr<0?"#10b981":"#8b5cf6",
+        sub:bmr>0?"incl. BMR":"food − activity"},
+    ].map(c=><div key={c.label} style={{background:"#f8f8f8",borderRadius:10,padding:"10px 12px"}}>
+      <div style={{fontSize:11,color:"#888",marginBottom:2}}>{c.label}</div>
+      <div style={{fontSize:20,fontWeight:600,color:c.color||"#111"}}>{c.val}<span style={{fontSize:12,fontWeight:400,color:"#aaa",marginLeft:2}}>{c.unit}</span></div>
+      <div style={{fontSize:11,color:"#aaa"}}>{c.goal?`goal: ${c.goal}${c.unit}`:c.sub||"\u00a0"}</div>
+      {c.goal && <Bar val={c.val} max={c.goal} color={c.color}/>}
+    </div>)}
+    </div>
+  </div>;
+}
+
+function FoodTab({log,setLog,day,goals,custFoods,setCustFoods,custActs,custMeals,setCustMeals}){
+  const[query,setQuery]=useState("");
+  const[meal,setMeal]=useState("Breakfast");
+  const[sel,setSel]=useState(null);
+  const[qty,setQty]=useState("1");
+  const[editingHit,setEditingHit]=useState(null);
+  // custom food form
+  const[cName,setCName]=useState("");
+  const[cSrvAmt,setCSrvAmt]=useState("");
+  const[cSrvUnit,setCSrvUnit]=useState("g");
+  const[cCal,setCCal]=useState("");
+  const[cPro,setCPro]=useState("");
+
+  const SRV_UNITS=["g","ml","kg","oz","cup","tbsp","tsp","piece","slice","serve"];
+  const QTY_PRESETS=["1/4","1/3","1/2","2/3","3/4","1","1.5","2","3","4"];
+  // Photo scan state
+  const[scanning,setScanning]=useState(false);
+  const[scanResult,setScanResult]=useState(null); // {kcal, protein, srv, name}
+  const[scanName,setScanName]=useState("");
+  const[scanError,setScanError]=useState("");
+  const photoRef=React.useRef();
+
+  async function handlePhoto(e){
+    const file=e.target.files?.[0];if(!file)return;
+    setScanning(true);setScanResult(null);setScanError("");setScanName("");
+
+    // Resize image to improve OCR reliability and reduce upload size
+    async function resizeImage(f,maxW=1600){
+      return new Promise(res=>{
+        const img=new Image();
+        const url=URL.createObjectURL(f);
+        img.onload=()=>{
+          const scale=Math.min(1,maxW/img.width);
+          const canvas=document.createElement("canvas");
+          canvas.width=Math.round(img.width*scale);
+          canvas.height=Math.round(img.height*scale);
+          canvas.getContext("2d").drawImage(img,0,0,canvas.width,canvas.height);
+          URL.revokeObjectURL(url);
+          canvas.toBlob(blob=>res(blob),"image/jpeg",0.92);
+        };
+        img.src=url;
+      });
+    }
+
+    async function tryOCR(engineNum){
+      const resized=await resizeImage(file);
+      const formData=new FormData();
+      formData.append("file",new File([resized],"label.jpg",{type:"image/jpeg"}));
+      formData.append("apikey","helloworld"); // public demo key — works for testing
+      formData.append("language","eng");
+      formData.append("isOverlayRequired","false");
+      formData.append("detectOrientation","true");
+      formData.append("scale","true");
+      formData.append("isTable","true");
+      formData.append("OCREngine",String(engineNum));
+      const resp=await fetch("https://api.ocr.space/parse/image",{method:"POST",body:formData});
+      if(!resp.ok)throw new Error("HTTP "+resp.status);
+      const data=await resp.json();
+      if(data.IsErroredOnProcessing)throw new Error(data.ErrorMessage||"OCR error");
+      return(data.ParsedResults?.[0]?.ParsedText||"").trim();
+    }
+
+    try{
+      // Try engine 1 first, fall back to engine 2
+      let rawText="";
+      try{ rawText=await tryOCR(1); }catch(e){ rawText=""; }
+      if(!rawText){ rawText=await tryOCR(2); }
+
+      if(!rawText){
+        // OCR got nothing — open blank manual form so user isn't stuck
+        setScanResult({kcal:0,protein:0,serving:"100g"});
+        setScanName("");
+        setScanError("OCR couldn't read text — values pre-filled to 0, please enter manually.");
+        setScanning(false);return;
+      }
+
+      const txt=rawText.toLowerCase();
+
+      function extractNum(patterns){
+        for(const pat of patterns){
+          const m=txt.match(pat);
+          if(m){const v=parseFloat(m[1]);if(!isNaN(v)&&v>=0)return v;}
+        }
+        return null;
+      }
+
+      // Energy — kcal or kJ
+      let kcal=extractNum([
+        /energy[^\n]{0,30}?(\d+\.?\d*)\s*kcal/,
+        /calories?[\s:]+([\d.]+)/,
+        /(\d+\.?\d*)\s*kcal/,
+        /kcal[\s:]+([\d.]+)/,
+      ]);
+      if(kcal===null){
+        const kj=extractNum([
+          /energy[^\n]{0,30}?(\d+\.?\d*)\s*kj/,
+          /(\d{3,4})\s*kj/,
+          /kj[\s:]+([\d.]+)/,
+        ]);
+        if(kj!==null)kcal=Math.round(kj/4.184);
+      }
+
+      const protein=extractNum([
+        /protein[\s:]+([\d.]+)/,
+        /protein[^\n]{0,20}?([\d.]+)\s*g/,
+        /([\d.]+)\s*g[^\n]{0,10}protein/,
+      ]);
+
+      let serving="100g";
+      const srvM=txt.match(/serving[\s\w]{0,10}?([\d.]+\s*(?:g|ml|oz))/i)
+        ||txt.match(/per\s+serve[^\n]{0,10}?([\d.]+\s*(?:g|ml))/i)
+        ||txt.match(/per\s+([\d.]+\s*(?:g|ml))/i);
+      if(srvM)serving=srvM[1].trim();
+
+      setScanResult({
+        kcal:kcal!=null?Math.round(kcal):0,
+        protein:protein!=null?Math.round(protein*10)/10:0,
+        serving
+      });
+      setScanName("");
+      if(kcal===null&&protein===null){
+        setScanError("Text was found but nutrition values couldn't be parsed — please fill in manually.");
+      }
+    }catch(err){
+      // Even on total failure, open blank form
+      setScanResult({kcal:0,protein:0,serving:"100g"});
+      setScanName("");
+      setScanError("Scan failed ("+err.message+") — please fill in values manually.");
+    }
+    setScanning(false);
+    if(photoRef.current)photoRef.current.value="";
+    const fi=document.getElementById("photo-file");
+    if(fi)fi.value="";
+  }
+
+  function useScanResult(){
+    if(!scanResult)return;
+    const name=scanName.trim()||"Scanned food";
+    const srv=scanResult.serving||"100g";
+    const newF={n:name,c:scanResult.kcal,p:scanResult.protein,srv,grp:"⭐ Your foods"};
+    const updated=[...custFoods,newF];
+    setCustFoods(updated);
+    const d=getDay(log,day);
+    const newLog={...log,[day]:{...d,food:[...d.food,{name,cal:scanResult.kcal,pro:scanResult.protein,meal}]}};
+    setLog(newLog);persist(newLog,goals,custActs,updated,custMeals);
+    setScanResult(null);setScanName("");
+  }
+
+  const allFoods=[...FOODS,...custFoods];
+  // Also search custom meals
+  const mealHits=query.trim()?custMeals.filter(m=>m.n.toLowerCase().includes(query.toLowerCase())).slice(0,4):[];
+  const foodHits=query.trim()?allFoods.filter(f=>f.n.toLowerCase().includes(query.toLowerCase())).slice(0,10):[];
+
+  function parseFrac(s){
+    // Parse fractions like "1/3", "2/3", "1.5" etc
+    if(s.includes("/")){const[a,b]=s.split("/");return parseFloat(a)/parseFloat(b);}
+    return parseFloat(s)||1;
+  }
+  const qNum=Math.max(0.01,parseFrac(qty));
+  const prevCal=sel?Math.round(sel.c*qNum):0;
+  const prevPro=sel?Math.round(sel.p*qNum*10)/10:0;
+
+  function pick(f){setSel(f);setQty("1");}
+
+  function commit(){
+    if(!sel)return;
+    const label=qty!=="1"?`${qty}× ${sel.n}`:sel.n;
+    const d=getDay(log,day);
+    const newLog={...log,[day]:{...d,food:[...d.food,{name:label,cal:prevCal,pro:prevPro,meal}]}};
+    setLog(newLog);persist(newLog,goals,custActs,custFoods,custMeals);
+    setQuery("");setSel(null);setQty("1");
+  }
+
+  function quickAdd(f,e){
+    e.stopPropagation();
+    const d=getDay(log,day);
+    const newLog={...log,[day]:{...d,food:[...d.food,{name:f.n,cal:f.c,pro:f.p,meal}]}};
+    setLog(newLog);persist(newLog,goals,custActs,custFoods,custMeals);
+    setQuery("");setSel(null);
+  }
+
+  function addMealToLog(cm,e){
+    e.stopPropagation();
+    const entries=cm.ingredients.map(ing=>({name:ing.name,cal:ing.cal,pro:ing.pro,meal}));
+    const d=getDay(log,day);
+    // Add a single summary entry for the meal total
+    const totCal=cm.ingredients.reduce((s,i)=>s+i.cal,0);
+    const totPro=cm.ingredients.reduce((s,i)=>s+i.pro,0);
+    const newLog={...log,[day]:{...d,food:[...d.food,{name:"🍽 "+cm.n,cal:Math.round(totCal),pro:Math.round(totPro*10)/10,meal,isMeal:true,ingredients:entries}]}};
+    setLog(newLog);persist(newLog,goals,custActs,custFoods,custMeals);
+    setQuery("");setSel(null);
+  }
+
+  function saveCustom(){
+    if(!cName.trim())return;
+    const srv=(cSrvAmt.trim()?cSrvAmt.trim()+" ":"")+cSrvUnit;
+    const newF={n:cName.trim(),c:parseFloat(cCal)||0,p:parseFloat(cPro)||0,srv,grp:"⭐ Your foods"};
+    const updated=[...custFoods,newF];
+    setCustFoods(updated);
+    const d=getDay(log,day);
+    const newLog={...log,[day]:{...d,food:[...d.food,{name:newF.n,cal:newF.c,pro:newF.p,meal}]}};
+    setLog(newLog);persist(newLog,goals,custActs,updated,custMeals);
+    setCName("");setCSrvAmt("");setCSrvUnit("g");setCCal("");setCPro("");
+  }
+
+  function removeFood(i){
+    const d=getDay(log,day);
+    const newLog={...log,[day]:{...d,food:d.food.filter((_,idx)=>idx!==i)}};
+    setLog(newLog);persist(newLog,goals,custActs,custFoods,custMeals);
+  }
+
+  const dayFood=getDay(log,day).food;
+
+  return <div>
+    {/* Search */}
+    <div style={{display:"flex",gap:8,marginBottom:8}}>
+      <input style={{flex:1,fontSize:14}} placeholder="Search food, drink or saved meal…" value={query} autoComplete="off"
+        onChange={e=>{setQuery(e.target.value);setSel(null);}}/>
+      <select value={meal} onChange={e=>setMeal(e.target.value)}
+        style={{padding:"7px 10px",border:"1px solid #ddd",borderRadius:7,background:"#fff"}}>
+        {MEALS.map(m=><option key={m}>{m}</option>)}
+      </select>
+    </div>
+
+    {/* Custom meal hits */}
+    {!sel && mealHits.length>0 && <div style={{marginBottom:8}}>
+      <div style={{fontSize:11,fontWeight:500,color:"#888",marginBottom:4}}>Saved meals</div>
+      <div style={{border:"1px solid #e5e5e5",borderRadius:10,overflow:"hidden"}}>
+        {mealHits.map((cm,i)=>{
+          const tot={cal:cm.ingredients.reduce((s,x)=>s+x.cal,0),pro:cm.ingredients.reduce((s,x)=>s+x.pro,0)};
+          return <div key={i} style={{display:"flex",alignItems:"center",gap:10,padding:"10px 12px",borderBottom:i<mealHits.length-1?"1px solid #f5f5f5":"none",background:"#fff"}}>
+            <div style={{flex:1}}>
+              <div style={{fontSize:13,fontWeight:500}}>🍽 {cm.n}</div>
+              <div style={{fontSize:11,color:"#bbb"}}>{cm.ingredients.length} ingredients · {Math.round(tot.cal)} kcal · {Math.round(tot.pro*10)/10}g protein</div>
+            </div>
+            <button onClick={e=>addMealToLog(cm,e)}
+              style={{fontSize:12,padding:"4px 10px",background:"#f0fdf4",color:"#166534",border:"1px solid #86efac",borderRadius:6,whiteSpace:"nowrap",flexShrink:0}}>
+              + Add meal
+            </button>
+          </div>;
+        })}
+      </div>
+    </div>}
+
+    {/* Food hits */}
+    {!sel && foodHits.length>0 && <div style={{border:"1px solid #e5e5e5",borderRadius:10,overflow:"hidden",marginBottom:10}}>
+      {foodHits.map((f,i)=>{
+        const isEditing=editingHit&&editingHit.f.n===f.n;
+        return <div key={i} style={{borderBottom:i<foodHits.length-1?"1px solid #f5f5f5":"none",background:isEditing?"#fffbeb":"#fff"}}>
+          <div style={{display:"flex",alignItems:"center",gap:10,padding:"10px 12px",cursor:"pointer"}}
+            onClick={()=>{if(!isEditing)pick(f);}}
+            onMouseEnter={e=>{if(!isEditing)e.currentTarget.style.background="#f9fafb";}}
+            onMouseLeave={e=>{if(!isEditing)e.currentTarget.style.background=isEditing?"#fffbeb":"#fff";}}
+          >
+            <div style={{flex:1}}>
+              <div style={{fontSize:13,fontWeight:500}}>
+                {f.grp==="⭐ Your foods"&&<span style={{marginRight:5}}>⭐</span>}{f.n}
+              </div>
+              <div style={{fontSize:11,color:"#bbb"}}>per {f.srv||"serve"} · {f.c} kcal · {f.p}g protein</div>
+            </div>
+            <button onClick={e=>{e.stopPropagation();isEditing?setEditingHit(null):setEditingHit({f,overrideCal:String(f.c),overridePro:String(f.p)});}}
+              style={{fontSize:12,padding:"4px 8px",background:isEditing?"#fef3c7":"#f3f4f6",color:isEditing?"#92400e":"#555",border:"1px solid "+(isEditing?"#fde68a":"#e5e5e5"),borderRadius:6,marginRight:4,flexShrink:0}}>
+              {isEditing?"✕":"Edit"}
+            </button>
+            <button onClick={e=>quickAdd(f,e)}
+              style={{fontSize:12,padding:"4px 10px",background:"#eff6ff",color:"#3b82f6",border:"none",borderRadius:6,whiteSpace:"nowrap",flexShrink:0}}>
+              + Quick add
+            </button>
+          </div>
+          {isEditing && <div style={{padding:"10px 12px 12px",background:"#fffbeb",borderTop:"1px solid #fde68a"}}>
+            <div style={{fontSize:11,color:"#92400e",marginBottom:8,fontWeight:500}}>Override values for this add (won't change the database)</div>
+            <div style={{display:"flex",gap:8,alignItems:"flex-end",flexWrap:"wrap",marginBottom:8}}>
+              <div style={{display:"flex",flexDirection:"column",gap:3}}>
+                <label style={{fontSize:11,color:"#666"}}>kcal per {f.srv||"serve"}</label>
+                <input type="number" min="0" value={editingHit.overrideCal}
+                  onChange={e=>setEditingHit(h=>({...h,overrideCal:e.target.value.replace(/-/g,"")}))}
+                  style={{width:80,padding:"6px 8px"}}/>
+              </div>
+              <div style={{display:"flex",flexDirection:"column",gap:3}}>
+                <label style={{fontSize:11,color:"#666"}}>protein (g)</label>
+                <input type="number" min="0" value={editingHit.overridePro}
+                  onChange={e=>setEditingHit(h=>({...h,overridePro:e.target.value.replace(/-/g,"")}))}
+                  style={{width:80,padding:"6px 8px"}}/>
+              </div>
+              <button onClick={()=>{
+                const override={...f,c:Math.max(0,parseFloat(editingHit.overrideCal)||0),p:Math.max(0,parseFloat(editingHit.overridePro)||0)};
+                setSel(override);setEditingHit(null);setQty("1");
+              }} style={{padding:"6px 14px",background:"#f59e0b",color:"#fff",border:"none",borderRadius:7,fontSize:12,fontWeight:500}}>
+                Use these values
+              </button>
+            </div>
+          </div>}
+        </div>;
+      })}
+    </div>}
+    {!sel && query.trim() && foodHits.length===0 && mealHits.length===0 &&
+      <div style={{textAlign:"center",padding:12,color:"#ccc",fontSize:13,marginBottom:8}}>No match — save it as a new food below</div>}
+
+    {/* Qty / confirm panel */}
+    {sel && <div style={{background:"#f0fdf4",border:"1px solid #86efac",borderRadius:10,padding:14,marginBottom:12}}>
+      <div style={{fontSize:14,fontWeight:600,color:"#166534",marginBottom:2}}>{sel.n}</div>
+      <div style={{fontSize:12,color:"#6b7280",marginBottom:12}}>Per serving ({sel.srv||"serve"}): {sel.c} kcal · {sel.p}g protein</div>
+      <div style={{marginBottom:10}}>
+        <div style={{fontSize:11,color:"#555",marginBottom:6}}>Number of servings</div>
+        {/* Fraction preset buttons */}
+        <div style={{display:"flex",gap:5,flexWrap:"wrap",marginBottom:8}}>
+          {QTY_PRESETS.map(q=><button key={q} onClick={()=>setQty(q)}
+            style={{padding:"4px 10px",fontSize:12,border:"1px solid #86efac",borderRadius:6,
+              background:qty===q?"#16a34a":"#fff",color:qty===q?"#fff":"#374151",fontWeight:qty===q?600:400}}>
+            {q}
+          </button>)}
+        </div>
+        {/* Also allow typing any value */}
+        <div style={{display:"flex",alignItems:"center",gap:8}}>
+          <input value={qty} onChange={e=>setQty(e.target.value)}
+            placeholder="or type e.g. 1/3"
+            style={{width:120,padding:"6px 10px",border:"2px solid #86efac",borderRadius:7,fontSize:14,fontWeight:600,textAlign:"center"}}/>
+          <div style={{background:"#dcfce7",borderRadius:8,padding:"8px 14px"}}>
+            <div style={{fontSize:11,color:"#166534",marginBottom:2}}>Total to log</div>
+            <div style={{fontSize:20,fontWeight:700,color:"#15803d"}}>{prevCal} <span style={{fontSize:12,fontWeight:400}}>kcal</span></div>
+            <div style={{fontSize:13,color:"#16a34a"}}>{prevPro}g protein</div>
+          </div>
+        </div>
+      </div>
+      <div style={{display:"flex",gap:8}}>
+        <button onClick={commit} style={{padding:"8px 22px",background:"#16a34a",color:"#fff",border:"none",borderRadius:7,fontSize:13,fontWeight:600}}>
+          Add to log
+        </button>
+        <button onClick={()=>{setSel(null);setQuery("");}} style={{padding:"8px 14px",background:"none",border:"1px solid #d1d5db",borderRadius:7,fontSize:13,color:"#666"}}>
+          Cancel
+        </button>
+      </div>
+    </div>}
+
+    {/* Photo scan */}
+    <div style={{marginBottom:12}}>
+      <div style={{fontSize:12,fontWeight:500,color:"#888",marginBottom:5}}>Scan a nutrition label</div>
+      <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>
+        {/* Camera input - mobile only */}
+        <input ref={photoRef} type="file" accept="image/*" capture="environment" onChange={handlePhoto}
+          style={{display:"none"}} id="photo-camera"/>
+        {/* File upload input - no capture restriction so works on desktop too */}
+        <input type="file" accept="image/*" onChange={handlePhoto}
+          style={{display:"none"}} id="photo-file"/>
+        <label htmlFor="photo-camera" style={{
+          padding:"7px 14px",border:"1px solid #818cf8",background:"#eef2ff",color:"#3730a3",
+          borderRadius:7,fontSize:13,fontWeight:500,cursor:"pointer",display:"inline-block"
+        }}>{scanning?"Scanning…":"📷 Camera"}</label>
+        <label htmlFor="photo-file" style={{
+          padding:"7px 14px",border:"1px solid #818cf8",background:"#eef2ff",color:"#3730a3",
+          borderRadius:7,fontSize:13,fontWeight:500,cursor:"pointer",display:"inline-block"
+        }}>{scanning?"Scanning…":"🖼 Upload image"}</label>
+        {scanError&&<span style={{fontSize:12,color:"#dc2626"}}>{scanError}</span>}
+      </div>
+      {scanResult&&<div style={{marginTop:10,background:"#f0fdf4",border:"1px solid #86efac",borderRadius:10,padding:12}}>
+        <div style={{fontSize:12,fontWeight:500,color:"#166534",marginBottom:8}}>Label read successfully</div>
+        <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:8,alignItems:"flex-end"}}>
+          <div style={{display:"flex",flexDirection:"column",gap:3,flex:2,minWidth:140}}>
+            <label style={{fontSize:11,color:"#555"}}>Food name (edit if needed)</label>
+            <input value={scanName} onChange={e=>setScanName(e.target.value)} placeholder="Enter food name"
+              style={{padding:"6px 10px",fontSize:13}}/>
+          </div>
+          <div style={{display:"flex",flexDirection:"column",gap:3}}>
+            <label style={{fontSize:11,color:"#555"}}>Serving</label>
+            <input value={scanResult.serving} onChange={e=>setScanResult(r=>({...r,serving:e.target.value}))}
+              style={{width:80,padding:"6px 8px"}}/>
+          </div>
+          <div style={{display:"flex",flexDirection:"column",gap:3}}>
+            <label style={{fontSize:11,color:"#555"}}>kcal</label>
+            <input type="number" min="0" value={scanResult.kcal} onChange={e=>setScanResult(r=>({...r,kcal:Math.max(0,parseInt(e.target.value)||0)}))}
+              style={{width:72,padding:"6px 8px"}}/>
+          </div>
+          <div style={{display:"flex",flexDirection:"column",gap:3}}>
+            <label style={{fontSize:11,color:"#555"}}>Protein (g)</label>
+            <input type="number" min="0" value={scanResult.protein} onChange={e=>setScanResult(r=>({...r,protein:Math.max(0,parseFloat(e.target.value)||0)}))}
+              style={{width:80,padding:"6px 8px"}}/>
+          </div>
+        </div>
+        <div style={{display:"flex",gap:8}}>
+          <button onClick={useScanResult} style={{padding:"7px 18px",background:"#16a34a",color:"#fff",border:"none",borderRadius:7,fontSize:13,fontWeight:500}}>
+            Add to log & save food
+          </button>
+          <button onClick={()=>{setScanResult(null);setScanName("");}} style={{padding:"7px 12px",background:"none",border:"1px solid #ccc",borderRadius:7,fontSize:13,color:"#666"}}>
+            Discard
+          </button>
+        </div>
+      </div>}
+    </div>
+
+    {/* Save new food */}
+    <div style={{fontSize:12,fontWeight:500,color:"#888",marginBottom:5}}>Save a new food to your list</div>
+    <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:4}}>
+      <input placeholder="Food name" value={cName} onChange={e=>setCName(e.target.value)} style={{flex:2,minWidth:120}}/>
+      <div style={{display:"flex",gap:4,alignItems:"center"}}>
+        <input placeholder="amount" value={cSrvAmt} onChange={e=>setCSrvAmt(e.target.value)} style={{width:60}}/>
+        <select value={cSrvUnit} onChange={e=>setCSrvUnit(e.target.value)}
+          style={{padding:"7px 8px",border:"1px solid #ddd",borderRadius:7,background:"#fff"}}>
+          {SRV_UNITS.map(u=><option key={u}>{u}</option>)}
+        </select>
+      </div>
+      <input type="number" placeholder="kcal" value={cCal} min="0" onChange={e=>setCCal(e.target.value.replace(/-/g,""))} style={{width:68}}/>
+      <input type="number" placeholder="protein g" value={cPro} min="0" onChange={e=>setCPro(e.target.value.replace(/-/g,""))} style={{width:80}}/>
+      <button onClick={saveCustom} style={{border:"1px solid #10b981",background:"#f0fdf4",color:"#065f46",fontWeight:500}}>
+        Save & add
+      </button>
+    </div>
+    <div style={{fontSize:11,color:"#ccc",marginBottom:16}}>Saved foods appear in search marked ⭐ and persist for future sessions. Hit "Edit" on any search result to override values for a single add.</div>
+
+    {/* Log */}
+    {dayFood.length===0
+      ?<div style={{textAlign:"center",padding:24,color:"#ddd",fontSize:13}}>Nothing logged yet — search above</div>
+      :MEALS.map(m=>{
+          const items=dayFood.map((f,i)=>({...f,i})).filter(f=>f.meal===m);
+          if(!items.length)return null;
+          return <div key={m} style={{border:"1px solid #e5e5e5",borderRadius:10,overflow:"hidden",marginBottom:8}}>
+            <div style={{padding:"6px 12px",background:"#f8f8f8",fontSize:12,fontWeight:500,color:"#888",borderBottom:"1px solid #e5e5e5"}}>{m}</div>
+            {items.map(f=><div key={f.i} style={{display:"flex",alignItems:"center",padding:"8px 12px",borderBottom:"1px solid #fafafa"}}>
+              <span style={{flex:1,fontSize:13,fontWeight:500}}>{f.name}</span>
+              <span style={{fontSize:12,color:"#bbb",marginRight:10,whiteSpace:"nowrap"}}>{f.cal} kcal · {f.pro}g protein</span>
+              <button onClick={()=>removeFood(f.i)} style={{background:"none",border:"none",color:"#ddd",fontSize:18,lineHeight:1,padding:"0 2px"}}>×</button>
+            </div>)}
+          </div>;
+        })
+    }
+  </div>;
+}
+
+function ActivityTab({log,setLog,day,goals,custActs,setCustActs,custFoods,custMeals}){
+  const[sel,setSel]=useState({});
+  const[dur,setDur]=useState(30);
+  const[showBmrEdit,setShowBmrEdit]=useState(false);
+  const[dayWt,setDayWt]=useState("");
+  const[dayAge,setDayAge]=useState("");
+  const[walkMode,setWalkMode]=useState("duration"); // "duration" or "steps"
+  const[steps,setSteps]=useState("8000");
+  const[newName,setNewName]=useState("");
+  const[newRate,setNewRate]=useState("5");
+  const allActs=[...ACTIVITIES,...custActs];
+  const{bmr,wt,age,burn,cal,net}=calcDay(log,day,goals);
+  const netWithBmr=bmr>0?cal-burn-bmr:cal-burn;
+
+  function saveDayBmr(){
+    const d=getDay(log,day);
+    const nwt=parseFloat(dayWt)||wt;
+    const nage=parseInt(dayAge)||age;
+    const newLog={...log,[day]:{...d,wt:nwt,age:nage}};
+    setLog(newLog);persist(newLog,goals,custActs,custFoods,custMeals);
+    setShowBmrEdit(false);
+  }
+
+  // Walking is always index 0 in ACTIVITIES
+  const WALK_IDX=allActs.findIndex(a=>a.n==="Walking");
+
+  // kcal from steps: ~0.04 kcal/step at 70kg, scaled by weight
+  function stepsToKcal(s){return Math.round(s*0.04*((wt||80)/70));}
+  // kcal from steps back to approx duration for display (walking ~100 steps/min)
+  function stepsToDur(s){return Math.round(s/100);}
+
+  function toggle(i){setSel(s=>({...s,[i]:!s[i]}));}
+
+  function saveActs(){
+    const actWt=wt||80;
+    const toAdd=allActs.filter((_,i)=>sel[i]).map((a,_,arr)=>{
+      const idx=allActs.indexOf(a);
+      if(idx===WALK_IDX && walkMode==="steps"){
+        const s=Math.max(0,parseInt(steps)||0);
+        return{name:"Walking",icon:"🚶",steps:s,dur:stepsToDur(s),cal:stepsToKcal(s),isSteps:true};
+      }
+      return{name:a.n,icon:a.e||"💪",dur,cal:Math.round(a.r*(actWt/70)*dur)};
+    });
+    if(!toAdd.length)return;
+    const d=getDay(log,day);
+    const newLog={...log,[day]:{...d,acts:[...d.acts,...toAdd]}};
+    setLog(newLog);persist(newLog,goals,custActs,custFoods,custMeals);setSel({});
+  }
+  function removeAct(i){
+    const d=getDay(log,day);
+    const newLog={...log,[day]:{...d,acts:d.acts.filter((_,idx)=>idx!==i)}};
+    setLog(newLog);persist(newLog,goals,custActs,custFoods,custMeals);
+  }
+  function addCustomAct(){
+    if(!newName.trim())return;
+    const updated=[...custActs,{n:newName.trim(),e:"💪",r:parseFloat(newRate)||5}];
+    setCustActs(updated);persist(log,goals,updated,custFoods);setNewName("");setNewRate("5");
+  }
+  const dayActs=getDay(log,day).acts;
+  const walkSelected=!!sel[WALK_IDX];
+  const walkStepNum=Math.max(0,parseInt(steps)||0);
+  const walkStepCal=stepsToKcal(walkStepNum);
+
+  return <div>
+    {/* BMR panel */}
+    <div style={{background:"#f0f9ff",border:"1px solid #bae6fd",borderRadius:10,padding:"12px 14px",marginBottom:14}}>
+      <div style={{display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}>
+        <div style={{flex:1}}>
+          <div style={{fontSize:11,color:"#0369a1",marginBottom:2}}>Basal Metabolic Rate (BMR)</div>
+          <div style={{fontSize:18,fontWeight:600,color:"#0c4a6e"}}>
+            {bmr>0?bmr+" kcal/day":"Set weight & age in Goals to calculate"}
+          </div>
+          {bmr>0&&<div style={{fontSize:11,color:"#0369a1",marginTop:3}}>
+            Today: {cal} in − {burn} activity − {bmr} BMR = <strong style={{color:netWithBmr<=0?"#059669":"#dc2626"}}>{netWithBmr>0?"+":""}{netWithBmr} kcal net</strong>
+          </div>}
+        </div>
+        <div style={{textAlign:"right",fontSize:11,color:"#888"}}>
+          {wt?wt+"kg":"—"} · {age?age+"y":"—"}
+        </div>
+        <button onClick={()=>{setShowBmrEdit(s=>!s);setDayWt(String(wt||""));setDayAge(String(age||""));}}
+          style={{fontSize:12,padding:"5px 10px",background:"#e0f2fe",color:"#0369a1",border:"1px solid #bae6fd",borderRadius:6}}>
+          {showBmrEdit?"Cancel":"Override today"}
+        </button>
+      </div>
+      {showBmrEdit&&<div style={{marginTop:10,display:"flex",gap:10,alignItems:"flex-end",flexWrap:"wrap"}}>
+        <div style={{display:"flex",flexDirection:"column",gap:3}}>
+          <label style={{fontSize:11,color:"#555"}}>Weight (kg)</label>
+          <input type="number" min="0" value={dayWt} onChange={e=>setDayWt(e.target.value.replace(/-/g,""))}
+            placeholder={String(wt||"")} style={{width:80}}/>
+        </div>
+        <div style={{display:"flex",flexDirection:"column",gap:3}}>
+          <label style={{fontSize:11,color:"#555"}}>Age</label>
+          <input type="number" min="0" value={dayAge} onChange={e=>setDayAge(e.target.value.replace(/-/g,""))}
+            placeholder={String(age||"")} style={{width:70}}/>
+        </div>
+        <button onClick={saveDayBmr} style={{padding:"7px 14px",background:"#0284c7",color:"#fff",border:"none",borderRadius:7,fontSize:12,fontWeight:500}}>
+          Save for today
+        </button>
+      </div>}
+    </div>
+    {/* Global duration control */}
+    <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:14,fontSize:13,color:"#666"}}>
+      Default duration:
+      <input type="number" value={dur} onChange={e=>setDur(Math.max(1,parseInt(e.target.value.replace(/-/g,""))||30))} min="1" max="600" step="5" style={{width:60}}/>
+      min <span style={{fontSize:12,color:"#ccc",marginLeft:4}}>tap cards to select, then save</span>
+    </div>
+
+    {/* Walking card — special treatment */}
+    {WALK_IDX>=0 && <div style={{marginBottom:8}}>
+      <div onClick={()=>toggle(WALK_IDX)} style={{
+        border:walkSelected?"2px solid #10b981":"1px solid #e5e5e5",borderRadius:10,
+        padding:10,cursor:"pointer",background:walkSelected?"#f0fdf4":"#fff",userSelect:"none",
+        display:"flex",alignItems:"center",gap:12,marginBottom: walkSelected?0:0
+      }}>
+        <div>
+          <div style={{fontSize:18}}>🚶</div>
+        </div>
+        <div style={{flex:1}}>
+          <div style={{fontSize:13,fontWeight:500}}>Walking</div>
+          {!walkSelected && <div style={{fontSize:11,color:"#aaa",marginTop:2}}>4 kcal/min · or log by steps</div>}
+          {walkSelected && walkMode==="duration" && <div style={{fontSize:11,color:"#10b981",marginTop:2}}>{dur} min · ~{Math.round(4*(wt/70)*dur)} kcal</div>}
+          {walkSelected && walkMode==="steps" && <div style={{fontSize:11,color:"#10b981",marginTop:2}}>{walkStepNum.toLocaleString()} steps · ~{walkStepCal} kcal</div>}
+        </div>
+        <div style={{fontSize:11,color:walkSelected?"#10b981":"#ccc",fontWeight:500}}>{walkSelected?"✓ selected":"tap"}</div>
+      </div>
+      {walkSelected && <div style={{background:"#f0fdf4",border:"1px solid #86efac",borderRadius:"0 0 10px 10px",padding:"10px 12px",marginTop:-2}}>
+        <div style={{display:"flex",gap:0,marginBottom:10,border:"1px solid #86efac",borderRadius:7,overflow:"hidden",width:"fit-content"}}>
+          {["duration","steps"].map(m=><button key={m} onClick={()=>setWalkMode(m)} style={{
+            padding:"5px 14px",fontSize:12,border:"none",cursor:"pointer",fontWeight:walkMode===m?600:400,
+            background:walkMode===m?"#10b981":"#fff",color:walkMode===m?"#fff":"#555"
+          }}>{m==="duration"?"By duration":"By steps"}</button>)}
+        </div>
+        {walkMode==="duration"
+          ? <div style={{fontSize:13,color:"#166534"}}>Using default duration: <strong>{dur} min</strong> · ~<strong>{Math.round(4*(wt/70)*dur)} kcal</strong></div>
+          : <div style={{display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}>
+              <div>
+                <div style={{fontSize:11,color:"#555",marginBottom:4}}>Step count</div>
+                <input type="number" value={steps} min="0" step="500"
+                  onChange={e=>setSteps(e.target.value.replace(/-/g,""))}
+                  style={{width:110,padding:"6px 10px",border:"2px solid #86efac",borderRadius:7,fontSize:16,fontWeight:600,textAlign:"center"}}/>
+              </div>
+              <div style={{background:"#dcfce7",borderRadius:8,padding:"8px 14px"}}>
+                <div style={{fontSize:11,color:"#166534",marginBottom:2}}>Estimated burn</div>
+                <div style={{fontSize:20,fontWeight:700,color:"#15803d"}}>{walkStepCal} <span style={{fontSize:12,fontWeight:400}}>kcal</span></div>
+                <div style={{fontSize:11,color:"#16a34a"}}>~{stepsToDur(walkStepNum)} min equivalent</div>
+              </div>
+            </div>
+        }
+      </div>}
+    </div>}
+
+    {/* All other activity cards */}
+    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(130px,1fr))",gap:8,marginBottom:12}}>
+      {allActs.map((a,i)=>{
+        if(i===WALK_IDX)return null; // Walking handled above
+        const on=!!sel[i];const cal=Math.round(a.r*(wt/70)*dur);
+        return <div key={i} onClick={()=>toggle(i)} style={{
+          border:on?"2px solid #10b981":"1px solid #e5e5e5",borderRadius:10,
+          padding:10,cursor:"pointer",background:on?"#f0fdf4":"#fff",userSelect:"none"
+        }}>
+          <div style={{fontSize:18,marginBottom:4}}>{a.e||"💪"}</div>
+          <div style={{fontSize:13,fontWeight:500}}>{a.n}</div>
+          <div style={{fontSize:11,color:"#aaa",marginTop:2}}>{on?`${dur} min selected`:`${a.r} kcal/min`}</div>
+          {on&&<div style={{fontSize:11,color:"#10b981",marginTop:1}}>~{cal} kcal</div>}
+        </div>;
+      })}
+    </div>
+
+    <button onClick={saveActs} style={{padding:"8px 20px",background:"#10b981",color:"#fff",border:"none",borderRadius:8,fontSize:13,fontWeight:500,marginBottom:16}}>
+      Save selected activities
+    </button>
+    <div style={{fontSize:12,fontWeight:500,color:"#888",marginBottom:6}}>Add custom activity</div>
+    <div style={{display:"flex",gap:8,marginBottom:16,flexWrap:"wrap"}}>
+      <input placeholder="Activity name" value={newName} onChange={e=>setNewName(e.target.value)} style={{flex:1,minWidth:120}}/>
+      <input type="number" placeholder="kcal/min" value={newRate} min="1" onChange={e=>setNewRate(e.target.value.replace(/-/g,""))} style={{width:80}}/>
+      <button onClick={addCustomAct}>Add</button>
+    </div>
+    {dayActs.length>0 && <div style={{border:"1px solid #e5e5e5",borderRadius:10,overflow:"hidden"}}>
+      <div style={{padding:"6px 12px",background:"#f8f8f8",fontSize:12,fontWeight:500,color:"#888",borderBottom:"1px solid #e5e5e5"}}>Logged today</div>
+      {dayActs.map((a,i)=><div key={i} style={{display:"flex",alignItems:"center",padding:"8px 12px",borderBottom:"1px solid #fafafa"}}>
+        <span style={{fontSize:16,marginRight:8}}>{a.icon}</span>
+        <span style={{flex:1,fontSize:13,fontWeight:500}}>{a.name}</span>
+        <span style={{fontSize:12,color:"#bbb",marginRight:10}}>
+          {a.isSteps ? `${a.steps?.toLocaleString()} steps · ${a.cal} kcal` : `${a.dur} min · ${a.cal} kcal`}
+        </span>
+        <button onClick={()=>removeAct(i)} style={{background:"none",border:"none",color:"#ddd",fontSize:18,lineHeight:1}}>×</button>
+      </div>)}
+    </div>}
+  </div>;
+}
+
+function HistoryTab({log,goals,setLog,custActs,custFoods,custMeals,setGoals,setCustActs,setCustFoods,setCustMeals}){
+  const[restoreMsg,setRestoreMsg]=useState("");
+  const fileRef=React.useRef();
+
+  // Show ALL logged days sorted newest first, not just last 14
+  const filled=Object.keys(log)
+    .filter(k=>log[k]&&(log[k].food?.length||log[k].acts?.length))
+    .sort((a,b)=>b.localeCompare(a));
+
+  function doBackup(){
+    const data={log,goals,custActs,custFoods,custMeals,exportedAt:new Date().toISOString()};
+    const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement("a");
+    a.href=url;
+    a.download="health_tracker_backup_"+localDateKey()+".json";
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function doRestore(e){
+    const file=e.target.files?.[0];if(!file)return;
+    const reader=new FileReader();
+    reader.onload=ev=>{
+      try{
+        const data=JSON.parse(ev.target.result);
+        if(!data.log)throw new Error("Invalid backup file");
+        // Merge logs — keep existing entries, add any from backup that are missing
+        const mergedLog={...data.log,...log};
+        // For any day in backup not in current log, use backup data
+        Object.keys(data.log).forEach(k=>{
+          if(!log[k]||(!log[k].food?.length&&!log[k].acts?.length)){
+            mergedLog[k]=data.log[k];
+          }
+        });
+        setLog(mergedLog);
+        if(data.goals)setGoals(data.goals);
+        if(data.custActs)setCustActs(data.custActs);
+        if(data.custFoods)setCustFoods(data.custFoods);
+        if(data.custMeals)setCustMeals(data.custMeals);
+        persist(mergedLog,data.goals||goals,data.custActs||custActs,data.custFoods||custFoods,data.custMeals||custMeals);
+        setRestoreMsg("Restored successfully — "+Object.keys(mergedLog).filter(k=>mergedLog[k]?.food?.length||mergedLog[k]?.acts?.length).length+" days of data loaded.");
+      }catch(err){
+        setRestoreMsg("Restore failed: "+err.message);
+      }
+    };
+    reader.readAsText(file);
+    if(fileRef.current)fileRef.current.value="";
+  }
+
+  return <div>
+    {/* Backup / restore */}
+    <div style={{background:"#f8f8f8",border:"1px solid #e5e5e5",borderRadius:10,padding:"12px 14px",marginBottom:16,display:"flex",gap:10,alignItems:"center",flexWrap:"wrap"}}>
+      <div style={{flex:1,fontSize:12,color:"#888"}}>Back up or restore all your data</div>
+      <button onClick={doBackup}
+        style={{fontSize:12,padding:"6px 14px",background:"#eff6ff",color:"#1d4ed8",border:"1px solid #bfdbfe",borderRadius:7,fontWeight:500}}>
+        ⬇ Download backup
+      </button>
+      <input ref={fileRef} type="file" accept=".json" onChange={doRestore} style={{display:"none"}} id="restore-input"/>
+      <label htmlFor="restore-input"
+        style={{fontSize:12,padding:"6px 14px",background:"#f0fdf4",color:"#166534",border:"1px solid #86efac",borderRadius:7,fontWeight:500,cursor:"pointer"}}>
+        ⬆ Restore from backup
+      </label>
+    </div>
+    {restoreMsg&&<div style={{fontSize:12,color:"#166534",background:"#f0fdf4",border:"1px solid #86efac",borderRadius:8,padding:"8px 12px",marginBottom:12}}>{restoreMsg}</div>}
+
+    {filled.length===0
+      ?<div style={{textAlign:"center",padding:32,color:"#ccc",fontSize:13}}>No data yet — start logging!</div>
+      :filled.map(k=>{
+        const{cal,pro,burn,net}=calcDay(log,k,goals);const d=getDay(log,k);
+        return <div key={k} style={{border:"1px solid #e5e5e5",borderRadius:10,overflow:"hidden",marginBottom:8}}>
+          <div style={{padding:"8px 14px",background:"#f8f8f8",display:"flex",justifyContent:"space-between",fontSize:13,fontWeight:500,borderBottom:"1px solid #e5e5e5"}}>
+            <span>{formatDay(k)} <span style={{fontSize:11,color:"#bbb",fontWeight:400}}>{k}</span></span>
+            <span style={{fontWeight:400,color:"#aaa",fontSize:12}}>{cal} kcal · {pro}g protein</span>
+          </div>
+          <div style={{padding:"10px 14px"}}>
+            {[["Energy",`${cal}${goals.cal?" / "+goals.cal:""} kcal`],
+              ["Protein",`${pro}${goals.pro?" / "+goals.pro+"g":"g"}`],
+              ["Activity burn",`${burn} kcal${d.acts?.length?" — "+d.acts.map(a=>a.name).join(", "):""}`],
+              ["Net energy",`${net} kcal`]
+            ].map(([l,v])=><div key={l} style={{display:"flex",justifyContent:"space-between",fontSize:12,color:"#888",padding:"2px 0"}}>
+              <span>{l}</span><span>{v}</span>
+            </div>)}
+          </div>
+        </div>;
+      })
+    }
+  </div>;
+}
+
+function MealsTab({custMeals,setCustMeals,custFoods,log,goals,custActs}){
+  const allFoods=[...FOODS,...custFoods];
+  const[mealName,setMealName]=useState("");
+  const[ingredients,setIngredients]=useState([]);
+  const[ingQ,setIngQ]=useState("");
+  const[ingSearch,setIngSearch]=useState("");
+  const[ingSel,setIngSel]=useState(null);
+  const[ingQty,setIngQty]=useState("1");
+  const[editIdx,setEditIdx]=useState(null);
+
+  const QTY_PRESETS=["1/4","1/3","1/2","2/3","3/4","1","1.5","2","3"];
+  function parseFrac(s){if(s.includes("/")){const[a,b]=s.split("/");return parseFloat(a)/parseFloat(b);}return parseFloat(s)||1;}
+
+  const ingHits=ingSearch.trim()?allFoods.filter(f=>f.n.toLowerCase().includes(ingSearch.toLowerCase())).slice(0,8):[];
+
+  function pickIng(f){setIngSel(f);setIngQty("1");setIngSearch("");}
+
+  function addIngredient(){
+    if(!ingSel)return;
+    const q=parseFrac(ingQty);
+    setIngredients(prev=>[...prev,{name:ingQty!=="1"?`${ingQty}× ${ingSel.n}`:ingSel.n,cal:Math.round(ingSel.c*q),pro:Math.round(ingSel.p*q*10)/10}]);
+    setIngSel(null);setIngQty("1");
+  }
+
+  function removeIng(i){setIngredients(prev=>prev.filter((_,idx)=>idx!==i));}
+
+  function saveMeal(){
+    if(!mealName.trim()||!ingredients.length)return;
+    const nm={n:mealName.trim(),ingredients};
+    const updated=editIdx!=null?custMeals.map((m,i)=>i===editIdx?nm:m):[...custMeals,nm];
+    setCustMeals(updated);persist(log,goals,custActs,custFoods,updated);
+    setMealName("");setIngredients([]);setEditIdx(null);
+  }
+
+  function startEdit(i){
+    const m=custMeals[i];setMealName(m.n);setIngredients(m.ingredients);setEditIdx(i);
+  }
+
+  function deleteMeal(i){
+    if(!window.confirm("Delete this meal?"))return;
+    const updated=custMeals.filter((_,idx)=>idx!==i);
+    setCustMeals(updated);persist(log,goals,custActs,custFoods,updated);
+    if(editIdx===i){setMealName("");setIngredients([]);setEditIdx(null);}
+  }
+
+  const totCal=ingredients.reduce((s,i)=>s+i.cal,0);
+  const totPro=ingredients.reduce((s,i)=>s+i.pro,0);
+
+  return <div>
+    <div style={{fontSize:13,color:"#888",marginBottom:16}}>Build reusable meals and drinks from individual ingredients. Add them to your log in one tap from the food search.</div>
+
+    {/* Saved meals list */}
+    {custMeals.length>0&&<div style={{marginBottom:20}}>
+      <div style={{fontSize:13,fontWeight:500,marginBottom:8}}>Your saved meals</div>
+      <div style={{border:"1px solid #e5e5e5",borderRadius:10,overflow:"hidden"}}>
+        {custMeals.map((m,i)=>{
+          const tc=m.ingredients.reduce((s,x)=>s+x.cal,0);
+          const tp=m.ingredients.reduce((s,x)=>s+x.pro,0);
+          return <div key={i} style={{borderBottom:i<custMeals.length-1?"1px solid #f5f5f5":"none"}}>
+            <div style={{display:"flex",alignItems:"center",padding:"10px 12px",background:"#fff"}}>
+              <div style={{flex:1}}>
+                <div style={{fontSize:13,fontWeight:500}}>🍽 {m.n}</div>
+                <div style={{fontSize:11,color:"#bbb"}}>{m.ingredients.length} ingredients · {Math.round(tc)} kcal · {Math.round(tp*10)/10}g protein</div>
+              </div>
+              <button onClick={()=>startEdit(i)} style={{fontSize:12,padding:"4px 9px",background:"#fffbeb",color:"#92400e",border:"1px solid #fde68a",borderRadius:6,marginRight:6}}>Edit</button>
+              <button onClick={()=>deleteMeal(i)} style={{fontSize:12,padding:"4px 9px",background:"#fef2f2",color:"#991b1b",border:"1px solid #fecaca",borderRadius:6}}>Delete</button>
+            </div>
+            <div style={{padding:"0 12px 10px",background:"#fafafa"}}>
+              {m.ingredients.map((ing,j)=><div key={j} style={{fontSize:12,color:"#888",padding:"2px 0"}}>
+                · {ing.name} — {ing.cal} kcal · {ing.pro}g protein
+              </div>)}
+            </div>
+          </div>;
+        })}
+      </div>
+    </div>}
+
+    {/* Build / edit meal */}
+    <div style={{background:"#f8f8f8",borderRadius:10,padding:14}}>
+      <div style={{fontSize:13,fontWeight:500,marginBottom:10}}>{editIdx!=null?"Edit meal":"Build a new meal"}</div>
+      <input placeholder="Meal name e.g. Morning Smoothie, Chicken Bowl" value={mealName} onChange={e=>setMealName(e.target.value)}
+        style={{width:"100%",marginBottom:12,fontSize:14,padding:"8px 12px"}}/>
+
+      {/* Ingredient search */}
+      <div style={{fontSize:12,color:"#888",marginBottom:5}}>Search & add ingredients</div>
+      <input placeholder="Search food…" value={ingSearch} autoComplete="off"
+        onChange={e=>{setIngSearch(e.target.value);setIngSel(null);}}
+        style={{width:"100%",marginBottom:6}}/>
+      {ingHits.length>0&&!ingSel&&<div style={{border:"1px solid #e5e5e5",borderRadius:8,overflow:"hidden",marginBottom:8}}>
+        {ingHits.map((f,i)=><div key={i} onClick={()=>pickIng(f)} style={{
+          padding:"8px 12px",borderBottom:i<ingHits.length-1?"1px solid #f5f5f5":"none",
+          cursor:"pointer",fontSize:13,background:"#fff"
+        }}
+          onMouseEnter={e=>e.currentTarget.style.background="#f9fafb"}
+          onMouseLeave={e=>e.currentTarget.style.background="#fff"}
+        >
+          {f.n} <span style={{fontSize:11,color:"#bbb"}}>· {f.c} kcal · {f.p}g protein per {f.srv}</span>
+        </div>)}
+      </div>}
+
+      {ingSel&&<div style={{background:"#f0fdf4",border:"1px solid #86efac",borderRadius:8,padding:10,marginBottom:8}}>
+        <div style={{fontSize:13,fontWeight:500,color:"#166534",marginBottom:6}}>{ingSel.n}</div>
+        <div style={{fontSize:11,color:"#6b7280",marginBottom:8}}>Per {ingSel.srv}: {ingSel.c} kcal · {ingSel.p}g protein</div>
+        <div style={{display:"flex",gap:5,flexWrap:"wrap",marginBottom:6}}>
+          {QTY_PRESETS.map(q=><button key={q} onClick={()=>setIngQty(q)}
+            style={{padding:"3px 8px",fontSize:12,border:"1px solid #86efac",borderRadius:5,
+              background:ingQty===q?"#16a34a":"#fff",color:ingQty===q?"#fff":"#374151"}}>
+            {q}
+          </button>)}
+        </div>
+        <div style={{display:"flex",gap:8,alignItems:"center"}}>
+          <input value={ingQty} onChange={e=>setIngQty(e.target.value)} placeholder="or type"
+            style={{width:80,padding:"5px 8px",textAlign:"center",fontSize:13}}/>
+          <button onClick={addIngredient} style={{padding:"6px 14px",background:"#16a34a",color:"#fff",border:"none",borderRadius:7,fontSize:12,fontWeight:500}}>
+            Add ingredient
+          </button>
+          <button onClick={()=>{setIngSel(null);}} style={{padding:"6px 10px",background:"none",border:"1px solid #ccc",borderRadius:7,fontSize:12,color:"#666"}}>Cancel</button>
+        </div>
+      </div>}
+
+      {/* Current ingredients */}
+      {ingredients.length>0&&<div style={{marginBottom:10}}>
+        <div style={{fontSize:12,color:"#888",marginBottom:5}}>Ingredients ({Math.round(totCal)} kcal · {Math.round(totPro*10)/10}g protein total)</div>
+        <div style={{border:"1px solid #e5e5e5",borderRadius:8,overflow:"hidden"}}>
+          {ingredients.map((ing,i)=><div key={i} style={{display:"flex",alignItems:"center",padding:"7px 12px",borderBottom:i<ingredients.length-1?"1px solid #f5f5f5":"none",background:"#fff"}}>
+            <span style={{flex:1,fontSize:13}}>{ing.name}</span>
+            <span style={{fontSize:12,color:"#bbb",marginRight:8}}>{ing.cal} kcal · {ing.pro}g protein</span>
+            <button onClick={()=>removeIng(i)} style={{background:"none",border:"none",color:"#ddd",fontSize:16,lineHeight:1}}>×</button>
+          </div>)}
+        </div>
+      </div>}
+
+      <div style={{display:"flex",gap:8}}>
+        <button onClick={saveMeal} disabled={!mealName.trim()||!ingredients.length}
+          style={{padding:"8px 20px",background:(!mealName.trim()||!ingredients.length)?"#e5e5e5":"#16a34a",color:(!mealName.trim()||!ingredients.length)?"#999":"#fff",border:"none",borderRadius:7,fontSize:13,fontWeight:500}}>
+          {editIdx!=null?"Update meal":"Save meal"}
+        </button>
+        {editIdx!=null&&<button onClick={()=>{setMealName("");setIngredients([]);setEditIdx(null);}}
+          style={{padding:"8px 14px",background:"none",border:"1px solid #ccc",borderRadius:7,fontSize:13,color:"#666"}}>
+          Cancel edit
+        </button>}
+      </div>
+    </div>
+  </div>;
+}
+
+function GoalsTab({goals,setGoals,log,custActs,custFoods,setCustFoods,custMeals}){
+  const[cal,setCal]=useState(String(goals.cal||""));
+  const[pro,setPro]=useState(String(goals.pro||""));
+  const[wt,setWt]=useState(String(goals.wt||""));
+  const[age,setAge]=useState(String(goals.age||""));
+  const[sex,setSex]=useState(goals.sex||"male");
+  const[ok,setOk]=useState(false);
+  const[editIdx,setEditIdx]=useState(null);
+  const[editF,setEditF]=useState({n:"",srv:"",c:"",p:""});
+
+  function save(){
+    const g={cal:parseInt(cal)||0,pro:parseInt(pro)||0,wt:parseFloat(wt)||80,age:parseInt(age)||0,sex};
+    setGoals(g);persist(log,g,custActs,custFoods,custMeals);setOk(true);setTimeout(()=>setOk(false),2000);
+  }
+  function startEdit(i){
+    const f=custFoods[i];
+    setEditIdx(i);setEditF({n:f.n,srv:f.srv||"",c:String(f.c),p:String(f.p)});
+  }
+  function saveEdit(){
+    const updated=custFoods.map((f,i)=>i===editIdx
+      ?{...f,n:editF.n.trim()||f.n,srv:editF.srv.trim()||f.srv,c:Math.max(0,parseFloat(editF.c)||0),p:Math.max(0,parseFloat(editF.p)||0)}
+      :f);
+    setCustFoods(updated);persist(log,goals,custActs,updated);setEditIdx(null);
+  }
+  function deleteFood(i){
+    if(!window.confirm("Delete this food from your list?"))return;
+    const updated=custFoods.filter((_,idx)=>idx!==i);
+    setCustFoods(updated);persist(log,goals,custActs,updated);if(editIdx===i)setEditIdx(null);
+  }
+
+  return <div>
+    <div style={{background:"#f8f8f8",borderRadius:10,padding:16,marginBottom:16}}>
+      <div style={{fontSize:13,fontWeight:500,marginBottom:12}}>Daily targets</div>
+      <div style={{display:"flex",gap:12,flexWrap:"wrap",alignItems:"flex-end"}}>
+        {[{l:"Energy (kcal)",v:cal,s:setCal,ph:"e.g. 2000"},{l:"Protein (g)",v:pro,s:setPro,ph:"e.g. 120"},{l:"Body weight (kg)",v:wt,s:setWt,ph:"e.g. 80"},{l:"Age",v:age,s:setAge,ph:"e.g. 35"}].map(({l,v,s,ph})=>
+          <div key={l} style={{display:"flex",flexDirection:"column",gap:3}}>
+            <label style={{fontSize:11,color:"#888"}}>{l}</label>
+            <input type="number" placeholder={ph} value={v} min="0" onChange={e=>s(e.target.value.replace(/-/g,""))} style={{width:110}}/>
+          </div>
+        )}
+        <div style={{display:"flex",flexDirection:"column",gap:3}}>
+          <label style={{fontSize:11,color:"#888"}}>Sex (for BMR)</label>
+          <select value={sex} onChange={e=>setSex(e.target.value)}
+            style={{padding:"7px 10px",border:"1px solid #ddd",borderRadius:7,background:"#fff",width:110}}>
+            <option value="male">Male</option>
+            <option value="female">Female</option>
+          </select>
+        </div>
+        <button onClick={save} style={{padding:"7px 18px",background:"#3b82f6",color:"#fff",border:"none",borderRadius:7,fontSize:13,fontWeight:500,alignSelf:"flex-end"}}>
+          Save goals
+        </button>
+      </div>
+      {ok && <div style={{fontSize:12,color:"#10b981",marginTop:8}}>Goals saved ✓</div>}
+    </div>
+
+    <div style={{fontSize:13,fontWeight:500,marginBottom:8}}>Manage your saved foods</div>
+    {custFoods.length===0
+      ? <div style={{fontSize:13,color:"#bbb",marginBottom:16}}>No custom foods saved yet — add them via "Save &amp; add" on the Log food tab.</div>
+      : <div style={{border:"1px solid #e5e5e5",borderRadius:10,overflow:"hidden",marginBottom:16}}>
+          {custFoods.map((f,i)=><div key={i} style={{borderBottom:i<custFoods.length-1?"1px solid #f0f0f0":"none"}}>
+            <div style={{display:"flex",alignItems:"center",padding:"9px 12px",background:"#fff"}}>
+              <div style={{flex:1}}>
+                <div style={{fontSize:13,fontWeight:500}}>⭐ {f.n}</div>
+                <div style={{fontSize:11,color:"#bbb"}}>per {f.srv||"serve"} · {f.c} kcal · {f.p}g protein</div>
+              </div>
+              <button onClick={()=>editIdx===i?setEditIdx(null):startEdit(i)}
+                style={{fontSize:12,padding:"4px 10px",background:"#fffbeb",color:"#92400e",border:"1px solid #fde68a",borderRadius:6,marginRight:6}}>
+                {editIdx===i?"Cancel":"Edit"}
+              </button>
+              <button onClick={()=>deleteFood(i)}
+                style={{fontSize:12,padding:"4px 10px",background:"#fef2f2",color:"#991b1b",border:"1px solid #fecaca",borderRadius:6}}>
+                Delete
+              </button>
+            </div>
+            {editIdx===i && <div style={{padding:"12px 14px",background:"#fffbeb"}}>
+              <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:10}}>
+                <div style={{display:"flex",flexDirection:"column",gap:3,flex:2,minWidth:120}}>
+                  <label style={{fontSize:11,color:"#888"}}>Name</label>
+                  <input value={editF.n} onChange={e=>setEditF(f=>({...f,n:e.target.value}))} style={{padding:"6px 8px"}}/>
+                </div>
+                <div style={{display:"flex",flexDirection:"column",gap:3,flex:1,minWidth:80}}>
+                  <label style={{fontSize:11,color:"#888"}}>Serving size</label>
+                  <input value={editF.srv} onChange={e=>setEditF(f=>({...f,srv:e.target.value}))} style={{padding:"6px 8px"}}/>
+                </div>
+                <div style={{display:"flex",flexDirection:"column",gap:3}}>
+                  <label style={{fontSize:11,color:"#888"}}>kcal</label>
+                  <input type="number" min="0" value={editF.c} onChange={e=>setEditF(f=>({...f,c:e.target.value.replace(/-/g,"")}))} style={{width:72,padding:"6px 8px"}}/>
+                </div>
+                <div style={{display:"flex",flexDirection:"column",gap:3}}>
+                  <label style={{fontSize:11,color:"#888"}}>Protein (g)</label>
+                  <input type="number" min="0" value={editF.p} onChange={e=>setEditF(f=>({...f,p:e.target.value.replace(/-/g,"")}))} style={{width:80,padding:"6px 8px"}}/>
+                </div>
+              </div>
+              <button onClick={saveEdit} style={{padding:"6px 16px",background:"#16a34a",color:"#fff",border:"none",borderRadius:7,fontSize:13,fontWeight:500}}>
+                Save changes
+              </button>
+            </div>}
+          </div>)}
+        </div>
+    }
+    <div style={{fontSize:12,color:"#bbb"}}>Body weight is used to estimate activity calorie burn. Data is stored in your browser only.</div>
+  </div>;
+}
+
+function DateNav({day,setDay}){
+  function prev(){const d=new Date(day+"T12:00:00");d.setDate(d.getDate()-1);setDay(localDateKey(d));}
+  function next(){const d=new Date(day+"T12:00:00");d.setDate(d.getDate()+1);const nk=localDateKey(d);if(nk<=todayKey())setDay(nk);}
+  return <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:16}}>
+    <button onClick={prev} style={{background:"none",border:"1px solid #e5e5e5",borderRadius:7,padding:"4px 12px",fontSize:13}}>← prev</button>
+    <span style={{flex:1,textAlign:"center",fontSize:15,fontWeight:500}}>{formatDay(day)}</span>
+    <button onClick={next} style={{background:"none",border:"1px solid #e5e5e5",borderRadius:7,padding:"4px 12px",fontSize:13}}>next →</button>
+  </div>;
+}
+
+function App(){
+  const init=loadState();
+  const[tab,setTab]=useState("food");
+  const[day,setDay]=useState(todayKey());
+  const[log,setLog]=useState(init.log);
+  const[goals,setGoals]=useState(init.goals);
+  const[custActs,setCustActs]=useState(init.custActs);
+  const[custFoods,setCustFoods]=useState(init.custFoods);
+  const[custMeals,setCustMeals]=useState(init.custMeals||[]);
+
+  return <div style={{fontFamily:"system-ui,sans-serif",maxWidth:700,margin:"0 auto",padding:"16px 16px 60px"}}>
+    <div style={{display:"flex",borderBottom:"1px solid #e5e5e5",marginBottom:20,overflowX:"auto"}}>
+      {[{id:"food",l:"Log food"},{id:"activity",l:"Activity"},{id:"meals",l:"Meals"},{id:"history",l:"History"},{id:"goals",l:"Goals"}].map(t=>
+        <button key={t.id} onClick={()=>setTab(t.id)} style={{
+          padding:"9px 16px",fontSize:13,background:"none",border:"none",
+          borderBottom:tab===t.id?"2px solid #111":"2px solid transparent",
+          color:tab===t.id?"#111":"#999",fontWeight:tab===t.id?600:400,borderRadius:0,whiteSpace:"nowrap"
+        }}>{t.l}</button>
+      )}
+    </div>
+    {(tab==="food"||tab==="activity")&&<>
+      <DateNav day={day} setDay={setDay}/>
+      <SummaryCards log={log} day={day} goals={goals} setLog={setLog} custActs={custActs} custFoods={custFoods} custMeals={custMeals}/>
+    </>}
+    {tab==="food"&&<FoodTab log={log} setLog={setLog} day={day} goals={goals} custFoods={custFoods} setCustFoods={setCustFoods} custActs={custActs} custMeals={custMeals} setCustMeals={setCustMeals}/>}
+    {tab==="activity"&&<ActivityTab log={log} setLog={setLog} day={day} goals={goals} custActs={custActs} setCustActs={setCustActs} custFoods={custFoods} custMeals={custMeals}/>}
+    {tab==="meals"&&<MealsTab custMeals={custMeals} setCustMeals={setCustMeals} custFoods={custFoods} log={log} goals={goals} custActs={custActs}/>}
+    {tab==="history"&&<HistoryTab log={log} goals={goals} setLog={setLog} custActs={custActs} custFoods={custFoods} custMeals={custMeals} setGoals={setGoals} setCustActs={setCustActs} setCustFoods={setCustFoods} setCustMeals={setCustMeals}/>}
+    {tab==="goals"&&<GoalsTab goals={goals} setGoals={setGoals} log={log} custActs={custActs} custFoods={custFoods} setCustFoods={setCustFoods} custMeals={custMeals}/>}
+  </div>;
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>
